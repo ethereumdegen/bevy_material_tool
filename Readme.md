@@ -1,6 +1,6 @@
  
 
-# Material Overrides Plugin for Bevy
+# Material Overrides Tool for Bevy
 
 This Rust crate provides functionality for loading materials from a `.glb` file and additional material configuration data from a separate file. It supports hot-swapping materials in a Bevy scene using two custom components: `MaterialOverrideComponent` and `MaterialOverrideWhenSceneReadyComponent`.
 
@@ -39,9 +39,9 @@ First, set up the `plugin` in your Bevy application:
 
 #### Configuring Material Overrides
 
-The plugin requires two components to manage material overrides:
+The plugin uses either of two components to manage material overrides:
 
-1. **`MaterialOverrideComponent`**: Attach this component to entities that require material replacement.
+1. **`MaterialOverrideComponent`**: Attach this component to entities that require material replacement immediately. 
    
    ```rust
    commands.entity(entity)
