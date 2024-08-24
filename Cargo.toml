@@ -1,0 +1,20 @@
+[package]
+name = "bevy_material_tool"
+description = "A material replacement workflow for bevy"
+version = "0.14.1" 
+edition = "2021"
+authors = [ "ethereumdegen" ]
+license = "MIT"
+ 
+keywords = ["bevy", "editor"]
+categories = ["game-development", "gui", "visualization"]
+exclude = ["assets"]
+
+ 
+ 
+
+
+
+[dependencies]
+ 
+bevy = "0.14.0"
