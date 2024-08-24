@@ -16,7 +16,7 @@ The materials MUST finish extraction before loading in the models
 pub fn material_overrides_plugin(app: &mut App) {
     app 	
 
-    
+    	
     	.init_state::<MaterialOverridesLoadingState>()
     	 
     	  .add_systems(OnEnter(MaterialOverridesLoadingState::Extracting), load_material_overrides)
@@ -83,6 +83,16 @@ pub struct ReadyForMaterialOverride ;
 */
 
 
+pub fn begin_loading_materials(
+	mut next_state: ResMut<NextState<MaterialOverridesLoadingState>>,
+	){
+
+
+next_state.set(MaterialOverridesLoadingState::Extracting);
+
+
+}
+
 
 fn load_material_overrides(
 
@@ -90,7 +100,7 @@ fn load_material_overrides(
 
 	mut material_overrides_resource: ResMut<MaterialOverridesResource>,
 
-	mut next_state: ResMut<NextState<MaterialOverridesLoadingState>>,
+	
 
 
 ){	
@@ -127,8 +137,10 @@ fn extract_material_overrides(
 			    		let Some(doodad_materials_gltf) = gltf_assets.get( *id ) else {continue};
 
 			    		for (material_name, material_handle) in &doodad_materials_gltf.named_materials {
-			    			//info!("extracted override material: {}", material_name.to_string());
+			    			info!("extracted override material: {}", material_name.to_string());
 			    			material_overrides_resource.extracted_materials_map.insert(material_name.to_string(), material_handle.clone());
+
+
 			    		}
 
 
@@ -149,6 +161,130 @@ fn extract_material_overrides(
 
 }
 
+
+
+fn handle_material_overrides(
+	mut commands:Commands, 
+//	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
+
+	material_override_query: Query<(Entity, &MaterialOverrideComponent), Changed<MaterialOverrideComponent> >,
+
+	//parent_query : Query<&Parent>, 
+	// name_query: Query<&Name>,
+	children_query: Query<&Children>,
+
+	material_handle_query: Query<&Handle<StandardMaterial>>,
+
+	 mut materials: ResMut<Assets<StandardMaterial>>,
+
+
+	material_overrides_resource: Res<MaterialOverridesResource>
+){
+
+
+
+
+   // for evt in scene_instance_evt_reader.read(){
+
+       //   let parent = evt.parent; //the scene 
+
+//          let Some(parent_entity) = parent_query.get(parent).ok().map( |p| p.get() ) else {continue};
+
+          for (mat_override_entity, mat_override_request) in  material_override_query.iter(){
+
+                	/*commands
+	                    .entity(doodad_entity)
+	                    .remove::<MaterialOverrideRequestComponent>( ); */
+
+
+
+             	info!("about to handle material override {:?}", mat_override_request);
+
+           //  	let Some(children) = children_query.get(doodad_entity).ok() else {continue};
+
+             	let material_name = &mat_override_request.material_override ;
+
+
+
+
+             //	for (mat_base,mat_type) in mat_override_request.material_overrides.iter() {
+
+             		//let mat_base_name = mat_base.get_material_layer_name();
+             		let Some(new_material_handle) = material_overrides_resource
+             		   .find_material_by_name(&material_name) else {
+             		   	warn!("could not get override material");
+             		   	continue
+             		     }; 
+
+
+
+             		     	if let Some( _mat_handle) = material_handle_query.get(mat_override_entity).ok(){ 
+	             		 	 		 commands
+					                    .entity(mat_override_entity)
+					                    .insert(new_material_handle.clone()); 
+
+					                  info!("inserted new material as override"); 
+	             		 	 	}else {
+             		 	 		//insert pink material 
+
+             		 	 		let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
+
+             		 	 		 commands
+				                    .entity(mat_override_entity)
+				                    .insert(warning_material.clone()); 
+
+				                  info!("inserted new material as override");
+
+
+             		 	 	}
+ 
+
+             		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
+
+             		 	 	if let Some( _mat_handle) = material_handle_query.get(child).ok(){
+ 
+
+             		 	 		 commands
+				                    .entity(child)
+				                    .insert(new_material_handle.clone()); 
+
+				                  info!("inserted new material as override");
+
+
+             		 	 	}else {
+             		 	 		//insert pink material 
+
+             		 	 		let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
+
+             		 	 		 commands
+				                    .entity(child)
+				                    .insert(warning_material.clone()); 
+
+				                  info!("inserted new material as override");
+
+
+             		 	 	}
+						     
+						    }
+
+
+				             
+
+
+
+             	//}
+
+
+
+          }
+           
+
+     // }
+
+}
+
+
+/*
 fn handle_material_overrides(
 	mut commands:Commands, 
 	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
@@ -161,7 +297,7 @@ fn handle_material_overrides(
 
 	material_handle_query: Query<&Handle<StandardMaterial>>,
 
-	  mut materials: ResMut<Assets<StandardMaterial>>,
+	 mut materials: ResMut<Assets<StandardMaterial>>,
 
 
 	material_overrides_resource: Res<MaterialOverridesResource>
@@ -174,9 +310,9 @@ fn handle_material_overrides(
 
           let parent = evt.parent; //the scene 
 
-          let Some(doodad_entity) = parent_query.get(parent).ok().map( |p| p.get() ) else {continue};
+          let Some(parent_entity) = parent_query.get(parent).ok().map( |p| p.get() ) else {continue};
 
-          if let Some(mat_override_request) = material_override_request_query.get(doodad_entity).ok(){
+          if let Some(mat_override_request) = material_override_request_query.get(parent_entity).ok(){
 
                 	/*commands
 	                    .entity(doodad_entity)
@@ -202,7 +338,7 @@ fn handle_material_overrides(
 
  
 
-             		 	 for child in DescendantIter::new(&children_query, doodad_entity) {
+             		 	 for child in DescendantIter::new(&children_query, parent_entity) {
 
              		 	 	if let Some( _mat_handle) = material_handle_query.get(child).ok(){
  
@@ -244,4 +380,4 @@ fn handle_material_overrides(
 
       }
 
-}
+}*/
