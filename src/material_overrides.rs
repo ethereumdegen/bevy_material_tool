@@ -1,11 +1,14 @@
 
  
+use crate::materials_config::MaterialTypesConfig;
+use bevy::math::Affine2;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
 
 //use crate::loading::EditorLoadingState;  
 use bevy::scene::SceneInstanceReady; 
 
+use serde:: {Serialize,Deserialize};
 
 
 /*
@@ -19,13 +22,24 @@ pub fn material_overrides_plugin(app: &mut App) {
     	
     	.init_state::<MaterialOverridesLoadingState>()
     	 
-    	  .add_systems(OnEnter(MaterialOverridesLoadingState::Extracting), load_material_overrides)
+    	.add_systems(OnEnter(MaterialOverridesLoadingState::Extracting), load_material_overrides)
 
      
-       .add_systems(Update, extract_material_overrides )
+       .add_systems(Update, 
+       	extract_material_overrides
+
+       	 )
+
+       .add_systems(OnEnter(MaterialOverridesLoadingState::Building), 
+       	build_material_overrides
+
+       	 )
 
 
-       .add_systems(Update, handle_material_overrides )
+       .add_systems(Update, (
+       	handle_material_overrides_when_scene_ready,
+       	handle_material_overrides
+       	).chain() )
 
    
 
@@ -39,32 +53,49 @@ pub enum MaterialOverridesLoadingState{
 	#[default]
    Init,
    Extracting,
+   Building,
    Complete
 }
 
 
+ 
 
 
-#[derive(Resource,Default)]
+#[derive(Resource)]
 pub struct MaterialOverridesResource {
 
 	pub doodad_materials_gltf_path: String,
+	pub material_types_config_path: String, 
 
 	pub doodad_materials_gltf: Option<Handle<Gltf>>,
 
-	pub extracted_materials_map :HashMap< String, Handle<StandardMaterial> >
+	pub extracted_materials_map : HashMap< String, Handle<StandardMaterial> >,
+
+	//pub built_materials_map: HashMap< String, Handle<StandardMaterial> >, //uses materials config 
+
+}
+ 
+
+
+
+#[derive(Resource,Default)]
+pub struct BuiltMaterialsResource {
+
+	 
+	pub built_materials_map: HashMap< String, Handle<StandardMaterial> >, //uses materials config 
 
 }
 
-impl MaterialOverridesResource{
+impl BuiltMaterialsResource{
 
 	pub fn find_material_by_name(&self, mat_name: &String ) -> Option<&Handle<StandardMaterial>> {
 
 
-		self.extracted_materials_map.get(mat_name)
+		self.built_materials_map.get(mat_name)
 	}
 
 }
+
 
 
 
@@ -75,6 +106,17 @@ pub struct MaterialOverrideComponent {
  
 	pub material_override: String
 }
+
+#[derive(Component,Debug)]
+pub struct RefreshMaterialOverride ;
+
+
+#[derive(Component,Debug)]
+pub struct MaterialOverrideWhenSceneReadyComponent {
+ 
+	pub material_override: String
+}
+
 
 
 /*
@@ -88,7 +130,7 @@ pub fn begin_loading_materials(
 	){
 
 
-next_state.set(MaterialOverridesLoadingState::Extracting);
+		next_state.set(MaterialOverridesLoadingState::Extracting);
 
 
 }
@@ -125,6 +167,8 @@ fn extract_material_overrides(
 
      gltf_assets: Res<Assets<Gltf>>,
 
+  //   mut material_assets: ResMut<Assets<StandardMaterial>>
+
 	 
 ){
 
@@ -137,6 +181,9 @@ fn extract_material_overrides(
 			    		let Some(doodad_materials_gltf) = gltf_assets.get( *id ) else {continue};
 
 			    		for (material_name, material_handle) in &doodad_materials_gltf.named_materials {
+			    			
+			    			
+
 			    			info!("extracted override material: {}", material_name.to_string());
 			    			material_overrides_resource.extracted_materials_map.insert(material_name.to_string(), material_handle.clone());
 
@@ -144,7 +191,7 @@ fn extract_material_overrides(
 			    		}
 
 
-			    		next_state.set(MaterialOverridesLoadingState::Complete);
+			    		next_state.set(MaterialOverridesLoadingState::Building);
 
 			    	}
 			    }
@@ -154,20 +201,95 @@ fn extract_material_overrides(
 
 
 
-	}
-
-
-	
+	} 
 
 }
 
+
+//read the config, loop through it, and populate 
+
+fn build_material_overrides(
+
+
+	    mut material_overrides_resource: ResMut<MaterialOverridesResource>,
+
+	     mut built_materials_resource: ResMut<BuiltMaterialsResource>,
+
+	    mut next_state: ResMut<NextState<MaterialOverridesLoadingState>>,
+
+	    mut material_assets: ResMut<Assets<StandardMaterial>>
+
+
+	 ){
+
+
+	let extracted_materials = &material_overrides_resource.extracted_materials_map;
+	let material_types_config_path = &material_overrides_resource.material_types_config_path;
+	 
+
+	let material_types_config = MaterialTypesConfig::load_from_file(
+		material_types_config_path
+		).expect("unable to load material types config");
+
+
+
+	for (built_material_name, material_config) in material_types_config.material_types.iter(){
+
+
+		if let Some( extracted_material_handle ) = extracted_materials.get( & material_config.material_name ) .clone() {
+
+			let Some(extracted_material) = material_assets.get(  extracted_material_handle  ) else {continue};
+
+
+			let mut built_material = extracted_material.clone();
+
+			 
+
+			let uv_scale = material_config.uv_scale_factor;
+			built_material.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+		 	
+		 	//apply diffuse color ? 
+
+
+		 	if let Some(new_color) = material_config.diffuse_color_tint {
+
+		 		built_material.base_color = new_color.clone().into(); 
+		 	}	
+
+
+			let built_material_handle = material_assets.add( built_material );
+
+
+				built_materials_resource.built_materials_map.insert(
+					built_material_name.clone(),
+
+					built_material_handle
+
+				);
+
+
+
+		}
+
+	
+
+
+	}
+
+
+	next_state.set(MaterialOverridesLoadingState::Complete);
+
+
+
+}
 
 
 fn handle_material_overrides(
 	mut commands:Commands, 
 //	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
 
-	material_override_query: Query<(Entity, &MaterialOverrideComponent), Changed<MaterialOverrideComponent> >,
+	material_override_query: Query<(Entity, &MaterialOverrideComponent), 
+	Or<( Changed<MaterialOverrideComponent> , Added<RefreshMaterialOverride>) > >,
 
 	//parent_query : Query<&Parent>, 
 	// name_query: Query<&Name>,
@@ -178,7 +300,8 @@ fn handle_material_overrides(
 	 mut materials: ResMut<Assets<StandardMaterial>>,
 
 
-	material_overrides_resource: Res<MaterialOverridesResource>
+	//material_overrides_resource: Res<MaterialOverridesResource>,
+	built_materials_resource: Res<BuiltMaterialsResource> ,
 ){
 
 
@@ -192,16 +315,11 @@ fn handle_material_overrides(
 
           for (mat_override_entity, mat_override_request) in  material_override_query.iter(){
 
-                	/*commands
-	                    .entity(doodad_entity)
-	                    .remove::<MaterialOverrideRequestComponent>( ); */
-
-
+                	 
 
              	info!("about to handle material override {:?}", mat_override_request);
 
-           //  	let Some(children) = children_query.get(doodad_entity).ok() else {continue};
-
+          
              	let material_name = &mat_override_request.material_override ;
 
 
@@ -209,12 +327,36 @@ fn handle_material_overrides(
 
              //	for (mat_base,mat_type) in mat_override_request.material_overrides.iter() {
 
+
+             	     let extracted_material = built_materials_resource
+             		   .find_material_by_name(&material_name);
+
+             		  let new_material_handle = match extracted_material {
+
+
+             		  	Some(mat) => mat.clone(), 
+             		  	None => {
+
+             		  	 
+             		 	 		//insert pink material 
+
+             		 	 		   let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
+ 
+				                  info!("inserted warning_material");
+				                  warning_material
+
+ 
+
+             		  	}
+             		  };
+
+
              		//let mat_base_name = mat_base.get_material_layer_name();
-             		let Some(new_material_handle) = material_overrides_resource
+             		/*let Some(new_material_handle) = material_overrides_resource
              		   .find_material_by_name(&material_name) else {
              		   	warn!("could not get override material");
              		   	continue
-             		     }; 
+             		     }; */
 
 
 
@@ -224,19 +366,7 @@ fn handle_material_overrides(
 					                    .insert(new_material_handle.clone()); 
 
 					                  info!("inserted new material as override"); 
-	             		 	 	}else {
-             		 	 		//insert pink material 
-
-             		 	 		let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
-
-             		 	 		 commands
-				                    .entity(mat_override_entity)
-				                    .insert(warning_material.clone()); 
-
-				                  info!("inserted new material as override");
-
-
-             		 	 	}
+	             		 	 	} 
  
 
              		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
@@ -251,21 +381,9 @@ fn handle_material_overrides(
 				                  info!("inserted new material as override");
 
 
-             		 	 	}else {
-             		 	 		//insert pink material 
-
-             		 	 		let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
-
-             		 	 		 commands
-				                    .entity(child)
-				                    .insert(warning_material.clone()); 
-
-				                  info!("inserted new material as override");
-
-
              		 	 	}
 						     
-						    }
+						 }
 
 
 				             
@@ -284,23 +402,23 @@ fn handle_material_overrides(
 }
 
 
-/*
-fn handle_material_overrides(
+
+fn handle_material_overrides_when_scene_ready(
 	mut commands:Commands, 
 	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
 
-	material_override_request_query: Query<&MaterialOverrideComponent >,
+	material_override_request_query: Query<&MaterialOverrideWhenSceneReadyComponent >,
 
 	parent_query : Query<&Parent>, 
 	// name_query: Query<&Name>,
 	children_query: Query<&Children>,
 
-	material_handle_query: Query<&Handle<StandardMaterial>>,
+	 
 
-	 mut materials: ResMut<Assets<StandardMaterial>>,
+	 
 
 
-	material_overrides_resource: Res<MaterialOverridesResource>
+	 
 ){
 
 
@@ -324,54 +442,16 @@ fn handle_material_overrides(
 
            //  	let Some(children) = children_query.get(doodad_entity).ok() else {continue};
 
-             	let material_name = &mat_override_request.material_override ;
+             	let material_override = mat_override_request.material_override.clone() ;
 
+ 				if let Some(mut cmd) = commands.get_entity( parent_entity ) {
 
-             //	for (mat_base,mat_type) in mat_override_request.material_overrides.iter() {
-
-             		//let mat_base_name = mat_base.get_material_layer_name();
-             		let Some(new_material_handle) = material_overrides_resource
-             		   .find_material_by_name(&material_name) else {
-             		   	warn!("could not get override material");
-             		   	continue
-             		     }; 
-
- 
-
-             		 	 for child in DescendantIter::new(&children_query, parent_entity) {
-
-             		 	 	if let Some( _mat_handle) = material_handle_query.get(child).ok(){
- 
-
-             		 	 		 commands
-				                    .entity(child)
-				                    .insert(new_material_handle.clone()); 
-
-				                  info!("inserted new material as override");
-
-
-             		 	 	}else {
-             		 	 		//insert pink material 
-
-             		 	 		let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
-
-             		 	 		 commands
-				                    .entity(child)
-				                    .insert(warning_material.clone()); 
-
-				                  info!("inserted new material as override");
-
-
-             		 	 	}
-						     
-						    }
-
-
-				             
-
-
-
-             	//}
+ 					cmd.insert(  
+ 						MaterialOverrideComponent {
+ 							material_override 
+ 						}
+ 					);
+ 				}
 
 
 
@@ -380,4 +460,4 @@ fn handle_material_overrides(
 
       }
 
-}*/
+}
