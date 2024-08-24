@@ -16,36 +16,26 @@ This Rust crate provides functionality for loading materials from a `.glb` file 
 
 To use this crate, add it to your `Cargo.toml`:
 
-```toml
-[dependencies]
-your_crate_name = "0.1.0"
-bevy = "0.11"
-serde = "1.0"
+```
+cargo add bevy_material_tool
 ```
 
 ### 2. Usage
 
 #### Setting Up the Plugin
 
-First, set up the `material_overrides_plugin` in your Bevy application:
+First, set up the `plugin` in your Bevy application:
 
 ```rust
-use bevy::prelude::*;
-use your_crate_name::material_overrides_plugin;
 
-fn main() {
-    App::build()
-        .add_plugins(DefaultPlugins)
-        .add_startup_system(setup.system())
-        .add_plugin(material_overrides_plugin)
-        .run();
-}
+    app.add_plugins(BevyMaterialToolPlugin{
+                    material_types_config_path: "assets/material_overrides/material_types.ron".to_string(),
+                    material_overrides_gltf_path : "material_overrides/doodad_material_overrides.glb".to_string()
+            }  );
 
-fn setup(mut commands: Commands) {
-    commands.spawn_bundle(YourSceneBundle::default());
-    // Add additional setup as needed
-}
+ 
 ```
+
 
 #### Configuring Material Overrides
 
@@ -69,18 +59,13 @@ The plugin requires two components to manage material overrides:
        });
    ```
 
+
+Take care not to add these components until after 'MaterialOverridesLoadingState::Complete' state has been entered.  !
+
 #### Loading Materials
 
 The materials are loaded from a `.glb` file specified in the `MaterialOverridesResource`:
 
-```rust
-commands.insert_resource(MaterialOverridesResource {
-    doodad_materials_gltf_path: "assets/materials/doodad_materials.glb".to_string(),
-    material_types_config_path: "assets/config/material_types_config.ron".to_string(),
-    doodad_materials_gltf: None,
-    extracted_materials_map: HashMap::new(),
-});
-```
 
 ### 3. Configuration File
 
