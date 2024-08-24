@@ -16,7 +16,7 @@ The materials MUST finish extraction before loading in the models
 pub fn material_overrides_plugin(app: &mut App) {
     app 	
 
-    	.init_resource::<MaterialOverridesResource>()
+    
     	.init_state::<MaterialOverridesLoadingState>()
     	 
     	  .add_systems(OnEnter(MaterialOverridesLoadingState::Extracting), load_material_overrides)
@@ -48,9 +48,11 @@ pub enum MaterialOverridesLoadingState{
 #[derive(Resource,Default)]
 pub struct MaterialOverridesResource {
 
-	doodad_materials_gltf: Option<Handle<Gltf>>,
+	pub doodad_materials_gltf_path: String,
 
-	extracted_materials_map :HashMap< String, Handle<StandardMaterial> >
+	pub doodad_materials_gltf: Option<Handle<Gltf>>,
+
+	pub extracted_materials_map :HashMap< String, Handle<StandardMaterial> >
 
 }
 
@@ -84,7 +86,7 @@ pub struct ReadyForMaterialOverride ;
 
 fn load_material_overrides(
 
-	  asset_server: ResMut<AssetServer> ,
+	asset_server: ResMut<AssetServer> ,
 
 	mut material_overrides_resource: ResMut<MaterialOverridesResource>,
 
@@ -93,7 +95,8 @@ fn load_material_overrides(
 
 ){	
 
-	let material_overrides_path = "material_overrides/doodad_material_overrides.glb";
+	let material_overrides_path = &material_overrides_resource.doodad_materials_gltf_path;
+	//let material_overrides_path = "material_overrides/doodad_material_overrides.glb";
 
 	let doodad_materials_gltf = asset_server.load::<Gltf>( material_overrides_path  );
 
@@ -150,10 +153,10 @@ fn handle_material_overrides(
 	mut commands:Commands, 
 	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
 
-	material_override_request_query: Query<&MaterialOverrideRequestComponent >,
+	material_override_request_query: Query<&MaterialOverrideComponent >,
 
 	parent_query : Query<&Parent>, 
-	name_query: Query<&Name>,
+	// name_query: Query<&Name>,
 	children_query: Query<&Children>,
 
 	material_handle_query: Query<&Handle<StandardMaterial>>,
