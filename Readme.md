@@ -10,6 +10,15 @@ This Rust crate provides functionality for loading materials from a `.glb` file 
 - **Hot-Swapping**: Dynamically swap materials in the scene using the `MaterialOverrideComponent` and `MaterialOverrideWhenSceneReadyComponent`.
 - **Flexible Configuration**: Customize materials using a configuration file that allows for UV scale adjustments and diffuse color tinting.
 
+
+
+### Define your materials like this: 
+
+![image](https://github.com/user-attachments/assets/1d5fda33-8916-4dbd-95aa-c10f22041939)
+
+
+
+
 ## Getting Started
 
 ### 1. Installation
