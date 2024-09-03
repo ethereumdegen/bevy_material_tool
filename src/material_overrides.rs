@@ -366,7 +366,9 @@ fn handle_material_overrides(
 					                    .insert(new_material_handle.clone()); 
 
 					                  info!("inserted new material as override"); 
-	             		 	 	} 
+	             		 	 	}else {
+	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 	}
  
 
              		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
@@ -381,7 +383,9 @@ fn handle_material_overrides(
 				                  info!("inserted new material as override");
 
 
-             		 	 	}
+             		 	 	}else {
+	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 	}
 						     
 						 }
 
