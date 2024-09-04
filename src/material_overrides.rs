@@ -363,7 +363,7 @@ fn handle_material_overrides(
              		     	if let Some( _mat_handle) = material_handle_query.get(mat_override_entity).ok(){ 
 	             		 	 		 commands
 					                    .entity(mat_override_entity)
-					                    .insert(new_material_handle.clone()); 
+					                    .try_insert(new_material_handle.clone()); 
 
 					                  info!("inserted new material as override"); 
 	             		 	 	}else {
@@ -378,7 +378,7 @@ fn handle_material_overrides(
 
              		 	 		 commands
 				                    .entity(child)
-				                    .insert(new_material_handle.clone()); 
+				                    .try_insert(new_material_handle.clone()); 
 
 				                  info!("inserted new material as override");
 
@@ -450,7 +450,7 @@ fn handle_material_overrides_when_scene_ready(
 
  				if let Some(mut cmd) = commands.get_entity( parent_entity ) {
 
- 					cmd.insert(  
+ 					cmd.try_insert(  
  						MaterialOverrideComponent {
  							material_override 
  						}
