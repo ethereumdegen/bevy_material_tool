@@ -251,46 +251,49 @@ fn build_material_overrides(
 		if let Some( extracted_material_handle ) = extracted_materials.get( & material_config.material_name ) .clone() {
 
 			let Some(extracted_material) = material_assets.get(  extracted_material_handle  ) else {continue};
+ 
 
-			let extracted_material_diffuse_texture = extracted_material.base_color_texture.clone();
-			let extracted_material_normal_texture = extracted_material.normal_map_texture.clone();
 
+			let mut cloned_base_material = extracted_material.clone() ;
+
+					let uv_scale = material_config.uv_scale_factor;
+					cloned_base_material.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+
+					if let Some(new_color) = material_config.diffuse_color_tint {
+				 		cloned_base_material.base_color = new_color.clone().into(); 
+				 	}
 
 			let   built_material =  match material_config.shader_type.clone()
 			.unwrap_or(MaterialShaderType::StandardMaterial) {
 			    MaterialShaderType::StandardMaterial =>  {
 
 
-			    	let mut new_standard_material = StandardMaterial::default();
+			    	//let mut new_standard_material = cloned_base_material;
 
-			    	let uv_scale = material_config.uv_scale_factor;
-					new_standard_material.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+			    	 
 
-					if let Some(new_color) = material_config.diffuse_color_tint {
-				 		new_standard_material.base_color = new_color.clone().into(); 
-				 	}
-
-				 	new_standard_material.base_color_texture = extracted_material_diffuse_texture;
-				 	new_standard_material.normal_map_texture = extracted_material_normal_texture;
+				 	//new_standard_material.base_color_texture = extracted_material_diffuse_texture;
+				 	//new_standard_material.normal_map_texture = extracted_material_normal_texture;
 				 		//waht else to apply ?? 
 
 			    	OverrideMaterialHandle::Standard( 
-			    		asset_server.add( new_standard_material )
+			    		asset_server.add( cloned_base_material )
 			    	 )
 			    },
 			    MaterialShaderType::FoliageMaterial =>  {
 
-			    	let mut new_foliage_material = FoliageMaterialExtension::default();
+			    	let new_foliage_material = FoliageMaterialExtension {
+			    		base: cloned_base_material,
 
-			    	let uv_scale = material_config.uv_scale_factor;
-					new_foliage_material.base.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+			    		..default()
+			    	};
 
-					if let Some(new_color) = material_config.diffuse_color_tint {
-				 		new_foliage_material.base.base_color = new_color.clone().into(); 
-				 	}
 
-				 	new_foliage_material.base.base_color_texture = extracted_material_diffuse_texture;
-				 	new_foliage_material.base.normal_map_texture = extracted_material_normal_texture;
+
+			    
+
+				 	//new_foliage_material.base.base_color_texture = extracted_material_diffuse_texture;
+				 	//new_foliage_material.base.normal_map_texture = extracted_material_normal_texture;
 
 
 			    	OverrideMaterialHandle::Foliage( 
@@ -399,7 +402,9 @@ fn handle_material_overrides(
 					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
 					                    }
 					                    OverrideMaterialHandle::Foliage(mat_handle) => {
-					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone())
+					                        .remove::<Handle<StandardMaterial>>( );
+
 					                    }
 					                }
 
@@ -420,10 +425,11 @@ fn handle_material_overrides(
 	             		 	 		
 	             		 	 		 match new_material_handle {
 					                    OverrideMaterialHandle::Standard(mat_handle) => {
-					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                        commands.entity(child).try_insert(mat_handle.clone());
 					                    }
 					                    OverrideMaterialHandle::Foliage(mat_handle) => {
-					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                        commands.entity(child).try_insert(mat_handle.clone())
+					                        .remove::<Handle<StandardMaterial>>( );
 					                    }
 					                } 
 

@@ -6,25 +6,47 @@
  // https://github.com/mikeam565/first-game/blob/main/assets/shaders/grass_shader.wgsl
 
 
+
+//https://github.com/bevyengine/bevy/blob/latest/assets/shaders/custom_vertex_attribute.wgsl 
+
+
+
+
 #import bevy_pbr::mesh_functions::{mesh_position_local_to_clip, get_world_from_local}
  
  #import bevy_pbr::{
-    forward_io::{  VertexOutput, FragmentOutput},
+     
       mesh_view_bindings::view,
         mesh_view_bindings::globals,
          
       pbr_bindings,
     
     pbr_fragment::pbr_input_from_standard_material,
-      pbr_functions::{alpha_discard,calculate_tbn_mikktspace,apply_pbr_lighting, main_pass_post_lighting_processing,
+      pbr_functions::{alpha_discard,  
       prepare_world_normal,
       apply_normal_mapping,
       calculate_view
 
       },
     // we can optionally modify the lit color before post-processing is applied
-    pbr_types::{STANDARD_MATERIAL_FLAGS_DOUBLE_SIDED_BIT,STANDARD_MATERIAL_FLAGS_UNLIT_BIT},
+    
 }
+
+
+#ifdef PREPASS_PIPELINE
+#import bevy_pbr::{
+    prepass_io::{VertexOutput, FragmentOutput},
+    pbr_deferred_functions::deferred_output,
+}
+#else
+#import bevy_pbr::{
+    forward_io::{VertexOutput, FragmentOutput},
+    pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing},
+    pbr_types::STANDARD_MATERIAL_FLAGS_UNLIT_BIT,
+}
+#endif
+
+
 
 
 
@@ -153,6 +175,59 @@ fn vertex(
 
 @fragment
 fn fragment(
+    in: VertexOutput,
+    @builtin(front_facing) is_front: bool,
+) -> FragmentOutput {
+    // generate a PbrInput struct from the StandardMaterial bindings
+    var pbr_input = pbr_input_from_standard_material(in, is_front);
+
+    // alpha discard
+    pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);
+
+
+       // toon shaded normals 
+      pbr_input.world_normal = vec3<f32>(0.0,1.0,0.0) ;
+
+      pbr_input.N = vec3<f32>(0.0,1.0,0.0) ;
+
+
+#ifdef PREPASS_PIPELINE
+
+//why is this broken 
+
+    // write the gbuffer, lighting pass id, and optionally normal and motion_vector textures
+    // let out = deferred_output(in, pbr_input);
+
+    var out: FragmentOutput;
+
+   // out.color = pbr_input.material.base_color;
+
+    return out ; 
+#else
+    // in forward mode, we calculate the lit color immediately, and then apply some post-lighting effects here.
+    // in deferred mode the lit color and these effects will be calculated in the deferred lighting shader
+    var out: FragmentOutput;
+    if (pbr_input.material.flags & STANDARD_MATERIAL_FLAGS_UNLIT_BIT) == 0u {
+        out.color = apply_pbr_lighting(pbr_input);
+    } else {
+        out.color = pbr_input.material.base_color;
+    }
+
+    // apply in-shader post processing (fog, alpha-premultiply, and also tonemapping, debanding if the camera is non-hdr)
+    // note this does not include fullscreen postprocessing effects like bloom.
+    out.color = main_pass_post_lighting_processing(pbr_input, out.color);
+
+     return out;
+#endif
+
+   
+}
+
+
+ 
+/*
+@fragment
+fn fragment(
      in: VertexOutput, 
         
 
@@ -175,7 +250,7 @@ fn fragment(
 
       var pbr_out: FragmentOutput;
  
-       pbr_out.color = apply_pbr_lighting(pbr_input);  // slow ?
+       pbr_out.color =  apply_pbr_lighting(pbr_input);  // slow ?
 
 
 
@@ -188,7 +263,11 @@ fn fragment(
      return color_out; 
     
 }
- 
+  
+
+*/
+
+
 
 
  /*
