@@ -14,7 +14,7 @@ use bevy::pbr::MaterialExtension;
 
 use bevy::pbr::ExtendedMaterial;
 
-pub const FOLIAGE_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(1653284778028047579);
+pub const FOLIAGE_SHADER_HANDLE: Handle<Shader> = Handle::weak_from_u128(1653284996028047579);
 
 pub type FoliageMaterialExtension = ExtendedMaterial<StandardMaterial, FoliageMaterial>;
 

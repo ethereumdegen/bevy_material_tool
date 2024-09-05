@@ -27,6 +27,9 @@ pub struct MaterialTypeConfig {
    pub material_name: String , 
    pub uv_scale_factor: f32, 
    pub diffuse_color_tint: Option<LinearRgba>, 
+
+
+   pub shader_type: Option<MaterialShaderType>
     
    
 }
@@ -60,3 +63,14 @@ impl MaterialTypesConfig {
 
 }
 
+
+
+#[derive(  Default, Deserialize, Serialize, Clone)]
+pub enum MaterialShaderType {
+    #[default]
+    StandardMaterial,
+
+    FoliageMaterial 
+
+
+}

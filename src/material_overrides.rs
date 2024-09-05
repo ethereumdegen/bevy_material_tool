@@ -1,6 +1,7 @@
 
  
-use crate::materials_config::MaterialTypesConfig;
+use crate::materials_config::MaterialShaderType;
+use crate::{advanced_materials::foliage_material::FoliageMaterialExtension, materials_config::MaterialTypesConfig};
 use bevy::math::Affine2;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -82,21 +83,28 @@ pub struct MaterialOverridesResource {
 pub struct BuiltMaterialsResource {
 
 	 
-	pub built_materials_map: HashMap< String, Handle<StandardMaterial> >, //uses materials config 
+	pub built_materials_map: HashMap< String, OverrideMaterialHandle >, //uses materials config 
 
 }
 
 impl BuiltMaterialsResource{
 
-	pub fn find_material_by_name(&self, mat_name: &String ) -> Option<&Handle<StandardMaterial>> {
+	pub fn find_material_by_name(&self, mat_name: &String ) -> Option<& OverrideMaterialHandle > {
 
 
-		self.built_materials_map.get(mat_name)
+		self.built_materials_map.get( mat_name )
 	}
 
 }
 
 
+
+pub enum OverrideMaterialHandle {
+
+	Standard(Handle<StandardMaterial>),
+	Foliage(Handle<FoliageMaterialExtension>)
+
+}
 
 
 
@@ -211,13 +219,17 @@ fn extract_material_overrides(
 fn build_material_overrides(
 
 
-	    mut material_overrides_resource: ResMut<MaterialOverridesResource>,
+	      material_overrides_resource: Res<MaterialOverridesResource>,
 
 	     mut built_materials_resource: ResMut<BuiltMaterialsResource>,
 
 	    mut next_state: ResMut<NextState<MaterialOverridesLoadingState>>,
 
-	    mut material_assets: ResMut<Assets<StandardMaterial>>
+
+	       material_assets: Res<Assets<StandardMaterial>>, //for reading the materials from the glb 
+	   // mut material_assets: ResMut<Assets<StandardMaterial>>,
+
+	    asset_server: ResMut<AssetServer>, 
 
 
 	 ){
@@ -240,30 +252,70 @@ fn build_material_overrides(
 
 			let Some(extracted_material) = material_assets.get(  extracted_material_handle  ) else {continue};
 
+			let extracted_material_diffuse_texture = extracted_material.base_color_texture.clone();
+			let extracted_material_normal_texture = extracted_material.normal_map_texture.clone();
 
-			let mut built_material = extracted_material.clone();
+
+			let   built_material =  match material_config.shader_type.clone()
+			.unwrap_or(MaterialShaderType::StandardMaterial) {
+			    MaterialShaderType::StandardMaterial =>  {
+
+
+			    	let mut new_standard_material = StandardMaterial::default();
+
+			    	let uv_scale = material_config.uv_scale_factor;
+					new_standard_material.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+
+					if let Some(new_color) = material_config.diffuse_color_tint {
+				 		new_standard_material.base_color = new_color.clone().into(); 
+				 	}
+
+				 	new_standard_material.base_color_texture = extracted_material_diffuse_texture;
+				 	new_standard_material.normal_map_texture = extracted_material_normal_texture;
+				 		//waht else to apply ?? 
+
+			    	OverrideMaterialHandle::Standard( 
+			    		asset_server.add( new_standard_material )
+			    	 )
+			    },
+			    MaterialShaderType::FoliageMaterial =>  {
+
+			    	let mut new_foliage_material = FoliageMaterialExtension::default();
+
+			    	let uv_scale = material_config.uv_scale_factor;
+					new_foliage_material.base.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+
+					if let Some(new_color) = material_config.diffuse_color_tint {
+				 		new_foliage_material.base.base_color = new_color.clone().into(); 
+				 	}
+
+				 	new_foliage_material.base.base_color_texture = extracted_material_diffuse_texture;
+				 	new_foliage_material.base.normal_map_texture = extracted_material_normal_texture;
+
+
+			    	OverrideMaterialHandle::Foliage( 
+			    		asset_server.add( new_foliage_material )
+			    	 )
+
+			    },
+			};
 
 			 
 
-			let uv_scale = material_config.uv_scale_factor;
-			built_material.uv_transform = Affine2::from_scale(Vec2::splat(uv_scale));
+			
 		 	
 		 	//apply diffuse color ? 
 
 
-		 	if let Some(new_color) = material_config.diffuse_color_tint {
+		 	
 
-		 		built_material.base_color = new_color.clone().into(); 
-		 	}	
-
-
-			let built_material_handle = material_assets.add( built_material );
+			//let built_material_handle = material_assets.add( built_material );
 
 
 				built_materials_resource.built_materials_map.insert(
 					built_material_name.clone(),
 
-					built_material_handle
+					built_material 
 
 				);
 
@@ -295,9 +347,11 @@ fn handle_material_overrides(
 	// name_query: Query<&Name>,
 	children_query: Query<&Children>,
 
-	material_handle_query: Query<&Handle<StandardMaterial>>,
+	//material_handle_query: Query<&Handle<StandardMaterial>>,
 
 	 mut materials: ResMut<Assets<StandardMaterial>>,
+
+	 mesh_query: Query<&Handle<Mesh>>,
 
 
 	//material_overrides_resource: Res<MaterialOverridesResource>,
@@ -331,25 +385,102 @@ fn handle_material_overrides(
              	     let extracted_material = built_materials_resource
              		   .find_material_by_name(&material_name);
 
-             		  let new_material_handle = match extracted_material {
+             		   
 
-
-             		  	Some(mat) => mat.clone(), 
-             		  	None => {
-
-             		  	 
-             		 	 		//insert pink material 
-
-             		 	 		   let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
- 
-				                  info!("inserted warning_material");
-				                  warning_material
-
+             		  if let Some(new_material_handle) =extracted_material {
  
 
-             		  	}
-             		  };
+             		  		if   mesh_query.get(mat_override_entity).ok().is_some() {
+	             		 	 		 
 
+
+	             		 	 		 match new_material_handle {
+					                    OverrideMaterialHandle::Standard(mat_handle) => {
+					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                    }
+					                    OverrideMaterialHandle::Foliage(mat_handle) => {
+					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                    }
+					                }
+
+
+                				 
+
+					                  info!("inserted new material as override"); 
+	             		 	 	}else {
+	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 	}
+ 
+
+	             		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
+
+	             		 	 	//if let Some( _mat_handle) = material_handle_query.get(child).ok(){
+	 								if   mesh_query.get(child).ok().is_some() {
+
+	             		 	 		
+	             		 	 		 match new_material_handle {
+					                    OverrideMaterialHandle::Standard(mat_handle) => {
+					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                    }
+					                    OverrideMaterialHandle::Foliage(mat_handle) => {
+					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                    }
+					                } 
+
+					                  info!("inserted new material as override");
+
+
+	             		 	 		}else {
+		             		 	 		 warn!("no existing material to replace "); 
+		             		 	 	}
+							     
+								 }
+
+
+
+
+
+
+
+             		  }else {
+
+             		  	  let warning_material = materials.add(Color::srgb(1.0, 0.0, 0.0)) ;
+ 
+				             info!("inserted warning_material");
+				          
+				          
+
+					        if   mesh_query.get(mat_override_entity).ok().is_some() {
+	             		 	 		 commands
+					                    .entity(mat_override_entity)
+					                    .try_insert(warning_material.clone()); 
+
+					                  info!("inserted new material as override"); 
+	             		 	 	}else {
+	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 	}
+ 
+
+             		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
+
+             		 	 	if   mesh_query.get(child).ok().is_some() {
+ 
+
+             		 	 		 commands
+				                    .entity(child)
+				                    .try_insert(warning_material.clone()); 
+
+				                  info!("inserted new material as override");
+
+
+             		 	 	}else {
+	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 	}
+						     
+						 }
+
+
+             		  }
 
              		//let mat_base_name = mat_base.get_material_layer_name();
              		/*let Some(new_material_handle) = material_overrides_resource
@@ -360,34 +491,7 @@ fn handle_material_overrides(
 
 
 
-             		     	if let Some( _mat_handle) = material_handle_query.get(mat_override_entity).ok(){ 
-	             		 	 		 commands
-					                    .entity(mat_override_entity)
-					                    .try_insert(new_material_handle.clone()); 
-
-					                  info!("inserted new material as override"); 
-	             		 	 	}else {
-	             		 	 		 warn!("no existing material to replace "); 
-	             		 	 	}
- 
-
-             		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
-
-             		 	 	if let Some( _mat_handle) = material_handle_query.get(child).ok(){
- 
-
-             		 	 		 commands
-				                    .entity(child)
-				                    .try_insert(new_material_handle.clone()); 
-
-				                  info!("inserted new material as override");
-
-
-             		 	 	}else {
-	             		 	 		 warn!("no existing material to replace "); 
-	             		 	 	}
-						     
-						 }
+             		     
 
 
 				             
