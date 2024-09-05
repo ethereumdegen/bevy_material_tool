@@ -107,7 +107,7 @@ struct Vertex {
 
 // https://bevyengine.org/examples/shaders/shader-instancing/
 
-
+//wheree do the vertices go !? 
 @vertex
 fn vertex(
          vertex: Vertex,
@@ -126,13 +126,7 @@ fn vertex(
 
     let wind: vec2<f32> = vec2f( wind_amount , wind_amount);
     
-    //   var noise = perlin_noise_2d(vec2<f32>(vertex_no_morph.world_position.x/50.0 + globals.time * 0.5, vertex_no_morph.world_position.z/50.0 + globals.time * 0.5));
-
-
-
-  //  var position_field_offset = vec3<f32>(vertex.position.x, 0., vertex.position.z);
-    //position_field_offset = position_field_offset - vec3f(config.wind,0.);
-
+   
     var position =vertex.position; 
 
    
@@ -144,13 +138,7 @@ fn vertex(
     position.z += offset.y * final_strength;
     
     // ---CLIP_POSITION---
-  //  out.position = mesh_position_local_to_clip(get_model_matrix( instance_index ), vec4<f32>(position, 1.0));
-
-     // var model = mesh_functions::get_model_matrix(instance_index);
-
-    // out.world_position = mesh_functions::mesh_position_local_to_world(model, vec4<f32>( position , 1.0));
-   // out.position = mesh_functions::position_world_to_clip(out.world_position.xyz);
-
+  
    //clip psn out ! 
       out. position = mesh_position_local_to_clip(get_world_from_local(
          instance_index // 0u ? 
@@ -158,14 +146,15 @@ fn vertex(
 
         ), vec4<f32>(position, 1.0));
 
-    //    out.color = base_material.base_color;
+
+
 
     return out;
 }
 
 
 
-
+/*
 @fragment
 fn fragment(
      in: VertexOutput, 
@@ -222,7 +211,7 @@ fn fragment(
      #endif
     
 }
- 
+ */
 
 
  /*
