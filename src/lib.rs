@@ -7,6 +7,7 @@ use crate::material_overrides::MaterialOverridesResource;
 pub mod material_overrides;
 pub mod materials_config;
 
+pub mod advanced_materials; 
 
 
 pub struct BevyMaterialToolPlugin {
@@ -41,8 +42,8 @@ impl Plugin for BevyMaterialToolPlugin {
 
 
     	 .add_plugins(material_overrides::material_overrides_plugin)
-
-    	;
+         .add_plugins(advanced_materials::advanced_materials_plugin)
+    	;  
 
 
 	}
