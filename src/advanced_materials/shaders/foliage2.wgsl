@@ -111,64 +111,19 @@ struct Vertex {
 
 // https://bevyengine.org/examples/shaders/shader-instancing/
 
-
-@vertex
-fn vertex(
-         vertex: Vertex,
-         @builtin(instance_index) instance_index: u32,
-  
-       ) -> VertexOutput {
-    
-
-    var out: VertexOutput;
-
-    let wind_speed = 0.5;
-    var wind_strength = 0.25 ;
-
-    let wind_amount = cos(globals.time * wind_speed);
-
-    let wind: vec2<f32> = vec2f( wind_amount , wind_amount);
-    
-    //   var noise = perlin_noise_2d(vec2<f32>(vertex_no_morph.world_position.x/50.0 + globals.time * 0.5, vertex_no_morph.world_position.z/50.0 + globals.time * 0.5));
-
-
-
-  //  var position_field_offset = vec3<f32>(vertex.position.x, 0., vertex.position.z);
-    //position_field_offset = position_field_offset - vec3f(config.wind,0.);
-
-    var position =vertex.position; 
-
-   
-     // ---WIND---
-    // only applies wind if the vertex is not on the bottom of the grass (or very small)
-    let offset =  wind ;
-    let final_strength = max(0.,log(vertex.position.y + 1.))  * wind_strength;
-    position.x += offset.x * final_strength;
-    position.z += offset.y * final_strength;
-    
-    // ---CLIP_POSITION---
  
-   //clip psn out ! 
-      out. position = mesh_position_local_to_clip(get_world_from_local(
-          instance_index // 0u ? 
-         
 
-        ), vec4<f32>(position, 1.0));
-
-        out.color = vec4<f32>(1.0,1.0,1.0,1.0);
-
-    return out;
-}
-
-
-
-
-/*
+#ifndef PREPASS_PIPELINE
+ 
 @fragment
 fn fragment(
     in: VertexOutput,
     @builtin(front_facing) is_front: bool,
 ) -> FragmentOutput {
+
+    
+ 
+
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
@@ -180,20 +135,10 @@ fn fragment(
 
       pbr_input.N = vec3<f32>(0.0,1.0,0.0) ;
 
+       pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);
 
-#ifdef PREPASS_PIPELINE
 
-//why is this broken 
-
-    // write the gbuffer, lighting pass id, and optionally normal and motion_vector textures
-    // let out = deferred_output(in, pbr_input);
-
-    var out: FragmentOutput;
-
-   // out.color = pbr_input.material.base_color;
-
-    return out ; 
-#else
+ 
     // in forward mode, we calculate the lit color immediately, and then apply some post-lighting effects here.
     // in deferred mode the lit color and these effects will be calculated in the deferred lighting shader
     var out: FragmentOutput;
@@ -208,12 +153,40 @@ fn fragment(
     out.color = main_pass_post_lighting_processing(pbr_input, out.color);
 
      return out;
-#endif
+
 
    
 }
 
+#endif
 
+
+
+
+@vertex
+fn vertex(
+  vertex: Vertex,
+  @builtin(instance_index) instance_index: u32,
+  ) -> VertexOutput {
+    
+    var out: VertexOutput;
+
+    //modify uv ? 
+
+
+     var position =  vertex.position  ;
+
+     //clip
+     out.position = mesh_position_local_to_clip(get_world_from_local(instance_index), vec4<f32>(position, 1.0));
+
+
+    return out;
+}
+
+
+
+
+/*
  
 @fragment
 fn fragment(
@@ -255,7 +228,6 @@ fn fragment(
   
 
 */
-
 
 
 

@@ -22,7 +22,7 @@ pub fn foliage_material_plugin(app: &mut App) {
     load_internal_asset!(
         app,
         FOLIAGE_SHADER_HANDLE,
-        "shaders/foliage.wgsl",
+        "shaders/foliage2.wgsl",
         Shader::from_wgsl
     );
 
@@ -60,9 +60,9 @@ impl MaterialExtension for FoliageMaterial {
 
     //use standard frag shader for now ! 
 
-    /* fn fragment_shader() -> ShaderRef {
+     fn fragment_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    } */
+    }  
 
    /*  fn deferred_fragment_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
@@ -70,7 +70,7 @@ impl MaterialExtension for FoliageMaterial {
 
     fn vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    }
+    }   
 
     /* 
     fn deferred_vertex_shader() -> ShaderRef {
@@ -78,7 +78,7 @@ impl MaterialExtension for FoliageMaterial {
     } */
 
     //important for proper depth testing
- /*   fn prepass_vertex_shader() -> ShaderRef {
+   fn prepass_vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    } */
+    }  
 }
