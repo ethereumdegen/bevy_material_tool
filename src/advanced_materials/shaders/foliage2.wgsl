@@ -120,7 +120,7 @@ fn vertex(
     var out: VertexOutput;
 
     let wind_speed = 0.5;
-    var wind_strength = 0.25 ;
+    var wind_strength = 1.25 ;
 
     let wind_amount = cos(globals.time * wind_speed);
 
@@ -173,7 +173,7 @@ fn fragment(
 
      @builtin(front_facing) is_front: bool,
 
-) -> @location(0) vec4<f32> {
+) -> FragmentOutput {
 
 
     //make this more efficient ? 
@@ -187,7 +187,11 @@ fn fragment(
 
         let out = pbr_input.material.base_color;
 
-        return out;
+         var pbr_out: FragmentOutput;
+
+         //what to do here ? 
+
+        return pbr_out;
 
     #else
 
@@ -204,15 +208,16 @@ fn fragment(
      
        pbr_out.color = apply_pbr_lighting(pbr_input);  // slow ?
 
-
-
-      //apply pbr lighting ? 
-
-      // var pbr_out: FragmentOutput;
+         pbr_out.color = main_pass_post_lighting_processing(pbr_input, pbr_out.color);
  
-      var color_out =   pbr_out.color; //   pbr_input.material.base_color;   
     
-     return color_out; 
+
+     if (pbr_out.color.a < 0.5) { // Use your threshold value here
+        discard;
+    }
+
+
+     return pbr_out; 
 
      #endif
     

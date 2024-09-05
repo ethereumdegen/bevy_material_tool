@@ -282,6 +282,9 @@ fn build_material_overrides(
 			    },
 			    MaterialShaderType::FoliageMaterial =>  {
 
+
+			    	cloned_base_material.alpha_mode = AlphaMode::Mask(0.5);
+
 			    	let new_foliage_material = FoliageMaterialExtension {
 			    		base: cloned_base_material,
 

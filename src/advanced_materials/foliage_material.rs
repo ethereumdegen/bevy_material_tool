@@ -78,9 +78,11 @@ impl MaterialExtension for FoliageMaterial {
     }  
 
     //important for proper depth testing
-   fn prepass_vertex_shader() -> ShaderRef {
-        ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    }  
+   
 
     */
+
+    fn prepass_vertex_shader() -> ShaderRef {
+        ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
+    }  
 }
