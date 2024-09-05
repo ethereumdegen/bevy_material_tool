@@ -416,7 +416,7 @@ fn handle_material_overrides(
 
 					                  info!("inserted new material as override"); 
 	             		 	 	}else {
-	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 		// warn!("no existing material to replace "); 
 	             		 	 	}
  
 
@@ -440,7 +440,7 @@ fn handle_material_overrides(
 
 
 	             		 	 		}else {
-		             		 	 		 warn!("no existing material to replace "); 
+		             		 	 		// warn!("no existing material to replace "); 
 		             		 	 	}
 							     
 								 }
@@ -466,7 +466,7 @@ fn handle_material_overrides(
 
 					                  info!("inserted new material as override"); 
 	             		 	 	}else {
-	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 		// warn!("no existing material to replace "); 
 	             		 	 	}
  
 
@@ -483,7 +483,7 @@ fn handle_material_overrides(
 
 
              		 	 	}else {
-	             		 	 		 warn!("no existing material to replace "); 
+	             		 	 		// warn!("no existing material to replace "); 
 	             		 	 	}
 						     
 						 }
@@ -555,7 +555,7 @@ fn handle_material_overrides_when_scene_ready(
 
 
 
-             	info!("about to handle material override {:?}", mat_override_request);
+             //	info!("about to handle material override {:?}", mat_override_request);
 
            //  	let Some(children) = children_query.get(doodad_entity).ok() else {continue};
 

@@ -92,7 +92,7 @@ var occlusion_sampler: sampler;
 
  
 struct Vertex {
-    
+    @builtin(instance_index) instance_index: u32,
     @location(0) position: vec3<f32>,
     //   @location(5) color: vec4<f32>,
 } 
@@ -111,9 +111,7 @@ struct Vertex {
 @vertex
 fn vertex(
          vertex: Vertex,
-         @builtin(instance_index) instance_index: u32,
- 
-       //   @builtin(instance_index) instance_index: u32,
+          
        ) -> VertexOutput {
     
 
@@ -141,7 +139,7 @@ fn vertex(
   
    //clip psn out ! 
       out. position = mesh_position_local_to_clip(get_world_from_local(
-         instance_index // 0u ? 
+        0u // // 0u ? 
 
 
         ), vec4<f32>(position, 1.0));
@@ -151,8 +149,42 @@ fn vertex(
 
     return out;
 }
+ 
+ /*
+@fragment
+fn fragment(
+     in: VertexOutput, 
+       @builtin(front_facing) is_front: bool,
+ 
+
+) -> FragmentOutput{
+
+     var pbr_input = pbr_input_from_standard_material(in, is_front);
+   
+
+      // toon shaded normals 
+      pbr_input.world_normal = vec3<f32>(0.0,1.0,0.0) ;
+
+      pbr_input.N = vec3<f32>(0.0,1.0,0.0) ;
 
 
+      var pbr_out: FragmentOutput;
+     
+       pbr_out.color = apply_pbr_lighting(pbr_input);  // slow ?
+
+         pbr_out.color = main_pass_post_lighting_processing(pbr_input, pbr_out.color);
+ 
+    
+
+     if (pbr_out.color.a < 0.5) { // Use your threshold value here
+     //   discard;
+    }
+
+
+     return pbr_out; 
+
+}
+*/
 
 /*
 @fragment
