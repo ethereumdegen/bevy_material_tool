@@ -119,8 +119,7 @@ struct Vertex {
 fn vertex(
          vertex: Vertex,
          @builtin(instance_index) instance_index: u32,
- 
-       //   @builtin(instance_index) instance_index: u32,
+  
        ) -> VertexOutput {
     
 
@@ -160,7 +159,8 @@ fn vertex(
 
    //clip psn out ! 
       out. position = mesh_position_local_to_clip(get_world_from_local(
-         instance_index // 0u ? 
+         // instance_index // 0u ? 
+         0u 
 
 
         ), vec4<f32>(position, 1.0));
@@ -173,6 +173,7 @@ fn vertex(
 
 
 
+/*
 @fragment
 fn fragment(
     in: VertexOutput,
@@ -181,8 +182,7 @@ fn fragment(
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
-    // alpha discard
-    pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);
+     
 
 
        // toon shaded normals 
@@ -225,7 +225,6 @@ fn fragment(
 
 
  
-/*
 @fragment
 fn fragment(
      in: VertexOutput, 
