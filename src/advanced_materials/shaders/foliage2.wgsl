@@ -176,6 +176,13 @@ fn vertex(
 
      var position =  vertex.position  ;
 
+      let wind_speed = 0.5;
+    var wind_strength = 0.25 ;
+
+    let wind_amount = cos(globals.time * wind_speed);
+
+
+
      //clip
      out.position = mesh_position_local_to_clip(get_world_from_local(instance_index), vec4<f32>(position, 1.0));
 

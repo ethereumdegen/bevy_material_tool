@@ -64,18 +64,18 @@ impl MaterialExtension for FoliageMaterial {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     }  
 
-   /*  fn deferred_fragment_shader() -> ShaderRef {
+     fn deferred_fragment_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    }   */
+    }    
 
     fn vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
     }   
 
-    /* 
+   
     fn deferred_vertex_shader() -> ShaderRef {
         ShaderRef::Handle(FOLIAGE_SHADER_HANDLE)
-    } */
+    }  
 
     //important for proper depth testing
    fn prepass_vertex_shader() -> ShaderRef {
