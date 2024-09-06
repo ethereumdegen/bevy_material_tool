@@ -9,10 +9,12 @@ use serde::Deserialize;
 
 use serde::Serialize;
 
-#[derive(  Deserialize, Serialize, Clone)]
+#[derive(  Resource, Deserialize, Serialize, Clone)]
 pub struct MaterialTypesConfig {
     
-    pub material_types: HashMap<String, MaterialTypeConfig>
+    pub material_types: HashMap<String, MaterialTypeConfig>,
+
+    pub material_replacement_sets: Option< HashMap < String,  HashMap<  String, String   > >  >
     
    
 }

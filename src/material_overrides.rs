@@ -23,30 +23,35 @@ pub fn material_overrides_plugin(app: &mut App) {
     	
     	.init_state::<MaterialOverridesLoadingState>()
     	 
-    	.add_systems(OnEnter(MaterialOverridesLoadingState::Extracting), load_material_overrides)
+    	.add_systems(
+    		OnEnter(MaterialOverridesLoadingState::Extracting),
+    	      load_material_overrides)
 
-     
+     	
+     	 .add_systems(OnEnter(MaterialOverridesLoadingState::Building), 
+       			build_material_overrides
+
+       	 )
+
+
        .add_systems(Update, 
-       	extract_material_overrides
-
+       	extract_material_overrides 
        	 )
 
-       .add_systems(OnEnter(MaterialOverridesLoadingState::Building), 
-       	build_material_overrides
-
-       	 )
-
+      
 
        .add_systems(Update, (
        	handle_material_overrides_when_scene_ready,
        	handle_material_overrides
-       	).chain() )
+       	).chain() .in_set(MaterialOverridesSet) )
 
    
 
        ;
 }
 
+#[derive(SystemSet,Hash,Clone,Debug,Eq,PartialEq)]
+pub struct MaterialOverridesSet;
 
 
 #[derive(Clone,Debug,PartialEq,Eq,Hash,States,Default)]
@@ -219,11 +224,15 @@ fn extract_material_overrides(
 fn build_material_overrides(
 
 
-	      material_overrides_resource: Res<MaterialOverridesResource>,
 
-	     mut built_materials_resource: ResMut<BuiltMaterialsResource>,
+	    material_overrides_resource: Res<MaterialOverridesResource>,
+
+	    mut built_materials_resource: ResMut<BuiltMaterialsResource>,
 
 	    mut next_state: ResMut<NextState<MaterialOverridesLoadingState>>,
+
+
+	    material_types_config: Res<MaterialTypesConfig>,
 
 
 	       material_assets: Res<Assets<StandardMaterial>>, //for reading the materials from the glb 
@@ -236,12 +245,9 @@ fn build_material_overrides(
 
 
 	let extracted_materials = &material_overrides_resource.extracted_materials_map;
-	let material_types_config_path = &material_overrides_resource.material_types_config_path;
+	//let material_types_config_path = &material_overrides_resource.material_types_config_path;
 	 
-
-	let material_types_config = MaterialTypesConfig::load_from_file(
-		material_types_config_path
-		).expect("unable to load material types config");
+ 
 
 
 
