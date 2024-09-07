@@ -13,6 +13,7 @@ pub mod material_name_map;
 
 pub mod advanced_materials; 
 
+pub mod gltf_models; 
 
 pub struct BevyMaterialToolPlugin {
     pub material_overrides_gltf_path: String ,
