@@ -383,7 +383,7 @@ fn handle_material_overrides(
 
                 	 
 
-             	info!("about to handle material override {:?}", mat_override_request);
+             	//info!("about to handle material override {:?}", mat_override_request);
 
           
              	let material_name = &mat_override_request.material_override ;
@@ -420,7 +420,7 @@ fn handle_material_overrides(
 
                 				 
 
-					                  info!("inserted new material as override"); 
+					             //     info!("inserted new material as override"); 
 	             		 	 	}else {
 	             		 	 		// warn!("no existing material to replace "); 
 	             		 	 	}
@@ -442,7 +442,7 @@ fn handle_material_overrides(
 					                    }
 					                } 
 
-					                  info!("inserted new material as override");
+					                //  info!("inserted new material as override");
 
 
 	             		 	 		}else {

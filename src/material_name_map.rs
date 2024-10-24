@@ -13,8 +13,8 @@ pub fn material_name_map_plugin(app: &mut App) {
     .add_systems(Update, 
 
     	 ( 
-    	 	build_material_name_map ,
-    	 	add_material_metadata_name_components, 
+    	 	//build_material_name_map ,
+    	 	add_material_metadata_name_components,   //use bevy 0.15 new feature for this ..
 
 
     		).chain()
@@ -90,7 +90,7 @@ fn build_material_name_map(
 			    			let material_asset_id = material_handle.id();
 			    			material_name_map_resource.material_name_map.insert( material_asset_id, material_name.clone().to_string()   );
 			    			 	
-			    			 info!("registered material name {:?}", material_name );
+			    			// info!("registered material name {:?}", material_name );
 			    		} 
 			    		 
 			    }
