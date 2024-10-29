@@ -48,7 +48,7 @@ fn add_gltf_model_scenes_on_added(
 			let Some(gltf_scene) = gltf.scenes.first() else {continue};
 
 			commands.entity( entity  )
-			.try_insert(  gltf_scene.clone() )
+			.try_insert(  SceneRoot ( gltf_scene.clone() ) )
 			.remove::<AddGltfModelComponent>()
 			 ;
 
@@ -89,7 +89,7 @@ for evt in asset_ready_event.read(){
 			    			let Some(gltf_scene) = loaded_gltf_asset.scenes.first() else {continue};
 
 							commands.entity( entity  )
-							.try_insert(  gltf_scene.clone() )
+							.try_insert( SceneRoot( gltf_scene.clone() ))
 							.remove::<AddGltfModelComponent>()
 							 ;
 

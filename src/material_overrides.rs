@@ -363,7 +363,7 @@ fn handle_material_overrides(
 
 	 mut materials: ResMut<Assets<StandardMaterial>>,
 
-	 mesh_query: Query<&Handle<Mesh>>,
+	 mesh_query: Query< &Mesh3d  >,
 
 
 	//material_overrides_resource: Res<MaterialOverridesResource>,
@@ -408,11 +408,14 @@ fn handle_material_overrides(
 
 	             		 	 		 match new_material_handle {
 					                    OverrideMaterialHandle::Standard(mat_handle) => {
-					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone());
+					                        commands.entity(mat_override_entity).try_insert(
+					                        	MeshMaterial3d ( mat_handle.clone() )
+					                        	);
 					                    }
 					                    OverrideMaterialHandle::Foliage(mat_handle) => {
-					                        commands.entity(mat_override_entity).try_insert(mat_handle.clone())
-					                        .remove::<Handle<StandardMaterial>>( );
+					                        commands.entity(mat_override_entity)
+					                        .remove::<MeshMaterial3d<StandardMaterial>>( ) //necessary? 
+					                        .try_insert(MeshMaterial3d::<FoliageMaterialExtension>(mat_handle.clone() ));
 
 					                    }
 					                }
@@ -434,11 +437,12 @@ fn handle_material_overrides(
 	             		 	 		
 	             		 	 		 match new_material_handle {
 					                    OverrideMaterialHandle::Standard(mat_handle) => {
-					                        commands.entity(child).try_insert(mat_handle.clone());
+					                        commands.entity(child).try_insert(MeshMaterial3d( mat_handle.clone()  ));
 					                    }
 					                    OverrideMaterialHandle::Foliage(mat_handle) => {
-					                        commands.entity(child).try_insert(mat_handle.clone())
-					                        .remove::<Handle<StandardMaterial>>( );
+					                        commands.entity(child)
+					                        .remove::<MeshMaterial3d<StandardMaterial>>( )//necessary? 
+					                        .try_insert(MeshMaterial3d(mat_handle.clone()));
 					                    }
 					                } 
 
@@ -468,7 +472,7 @@ fn handle_material_overrides(
 					        if   mesh_query.get(mat_override_entity).ok().is_some() {
 	             		 	 		 commands
 					                    .entity(mat_override_entity)
-					                    .try_insert(warning_material.clone()); 
+					                    .try_insert(MeshMaterial3d(warning_material.clone())); 
 
 					                  info!("inserted new material as override"); 
 	             		 	 	}else {
@@ -483,7 +487,7 @@ fn handle_material_overrides(
 
              		 	 		 commands
 				                    .entity(child)
-				                    .try_insert(warning_material.clone()); 
+				                    .try_insert(MeshMaterial3d(warning_material.clone())); 
 
 				                  info!("inserted new material as override");
 
@@ -549,6 +553,7 @@ fn handle_material_overrides_when_scene_ready(
 
     for evt in scene_instance_evt_reader.read(){
 
+    		let scene_instance_id = evt.instance_id ;
           let parent = evt.parent; //the scene 
 
           let Some(parent_entity) = parent_query.get(parent).ok().map( |p| p.get() ) else {continue};
