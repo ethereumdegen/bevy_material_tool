@@ -38,10 +38,11 @@ pub fn material_overrides_plugin(app: &mut App) {
        	extract_material_overrides 
        	 )
 
-      
+      	
+      	.add_observer(handle_material_overrides_when_scene_ready)
 
        .add_systems(Update, (
-       	handle_material_overrides_when_scene_ready,
+       	//handle_material_overrides_when_scene_ready,
        	handle_material_overrides
        	).chain() .in_set(MaterialOverridesSet) )
 
@@ -528,51 +529,30 @@ fn handle_material_overrides(
 
 }
 
-
+	
+	//this is  a  trigger !
+	// way nicer for a system for certain things  !  
 
 fn handle_material_overrides_when_scene_ready(
-	mut commands:Commands, 
-	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
-
-	material_override_request_query: Query<&MaterialOverrideWhenSceneReadyComponent >,
-
-	parent_query : Query<&Parent>, 
-	// name_query: Query<&Name>,
-	children_query: Query<&Children>,
-
 	 
+	scene_instance_evt_trigger: Trigger<SceneInstanceReady>  ,
 
+	mut material_override_request_query: Query<&MaterialOverrideWhenSceneReadyComponent >,
+
+	mut commands: Commands, 
+ 
 	 
+){  
+
+	let trig_entity = scene_instance_evt_trigger.entity();
 
 
-	 
-){
+	 let Some(mat_override_request) = material_override_request_query.get_mut(trig_entity).ok() else {return};
+ 
 
+          let material_override = mat_override_request.material_override.clone() ;
 
-
-
-    for evt in scene_instance_evt_reader.read(){
-
-    		let scene_instance_id = evt.instance_id ;
-          let parent = evt.parent; //the scene 
-
-          let Some(parent_entity) = parent_query.get(parent).ok().map( |p| p.get() ) else {continue};
-
-          if let Some(mat_override_request) = material_override_request_query.get(parent_entity).ok(){
-
-                	/*commands
-	                    .entity(doodad_entity)
-	                    .remove::<MaterialOverrideRequestComponent>( ); */
-
-
-
-             //	info!("about to handle material override {:?}", mat_override_request);
-
-           //  	let Some(children) = children_query.get(doodad_entity).ok() else {continue};
-
-             	let material_override = mat_override_request.material_override.clone() ;
-
- 				if let Some(mut cmd) = commands.get_entity( parent_entity ) {
+ 				if let Some(mut cmd) = commands.get_entity( trig_entity ) {
 
  					cmd.try_insert(  
  						MaterialOverrideComponent {
@@ -581,11 +561,6 @@ fn handle_material_overrides_when_scene_ready(
  					);
  				}
 
-
-
-          }
-           
-
-      }
+ 
 
 }
