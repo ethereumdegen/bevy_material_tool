@@ -27,12 +27,15 @@ pub fn material_replacements_plugin(app: &mut App) {
     	
     	.init_state::<MaterialOverridesLoadingState>()
     	 
-     
+     	
+      .add_observer(handle_material_replacements_when_scene_ready)
+
+
 
 
        .add_systems(Update, (
        	handle_material_replacement_sets ,
-       	handle_material_replacements_when_scene_ready,
+      // 	handle_material_replacements_when_scene_ready,
        	handle_material_replacements
        	).chain().before( MaterialOverridesSet ) )
 
@@ -191,11 +194,15 @@ fn handle_material_replacement_sets(
 }
 
 fn handle_material_replacements_when_scene_ready(
-	mut commands:Commands, 
-	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
+
+	scene_instance_evt_trigger: Trigger<SceneInstanceReady>  ,
 
 	material_override_request_query: Query<&MaterialReplacementWhenSceneReadyComponent >,
 
+	mut commands:Commands, 
+//	mut  scene_instance_evt_reader: EventReader<SceneInstanceReady>,  
+
+	
 	parent_query : Query<&Parent>, 
 	// name_query: Query<&Name>,
 	//children_query: Query<&Children>,
@@ -205,12 +212,14 @@ fn handle_material_replacements_when_scene_ready(
 	 
 ){ 
 
-    for evt in scene_instance_evt_reader.read(){
+	let trig_entity = scene_instance_evt_trigger.entity();
 
-          let parent = evt.parent; //the scene 
+	let Some(parent_entity) = parent_query.get(trig_entity).ok().map( |p| p.get() ) else {return};
 
-          let Some(parent_entity) = parent_query.get(parent).ok().map( |p| p.get() ) else {continue};
 
+   // for evt in scene_instance_evt_reader.read(){
+ 
+          
           if let Some(mat_override_request) = material_override_request_query.get(parent_entity).ok(){
     
              	let material_replacements = mat_override_request.material_replacements.clone() ;
@@ -229,6 +238,6 @@ fn handle_material_replacements_when_scene_ready(
           }
            
 
-      }
+     // }
 
 }

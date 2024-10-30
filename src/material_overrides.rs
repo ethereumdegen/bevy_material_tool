@@ -537,18 +537,23 @@ fn handle_material_overrides_when_scene_ready(
 	 
 	scene_instance_evt_trigger: Trigger<SceneInstanceReady>  ,
 
-	mut material_override_request_query: Query<&MaterialOverrideWhenSceneReadyComponent >,
+	  material_override_request_query: Query<&MaterialOverrideWhenSceneReadyComponent >,
 
 	mut commands: Commands, 
- 
+ 	
+ 	parent_query : Query<&Parent>, 
 	 
 ){  
 
 	let trig_entity = scene_instance_evt_trigger.entity();
 
 
-	 let Some(mat_override_request) = material_override_request_query.get_mut(trig_entity).ok() else {return};
- 
+	let Some(parent_entity) = parent_query.get(trig_entity).ok().map( |p| p.get() ) else {return};
+
+
+ 	// need to check parent !? 
+	 let Some(mat_override_request) = material_override_request_query.get(parent_entity).ok() else {return};
+ 	
 
           let material_override = mat_override_request.material_override.clone() ;
 

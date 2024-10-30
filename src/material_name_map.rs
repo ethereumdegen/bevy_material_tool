@@ -44,9 +44,9 @@ fn add_material_metadata_name_components(
 
 	mut commands: Commands, 
 
-	entity_query:  Query< (Entity, &Handle<StandardMaterial>), Added<Handle<StandardMaterial>> >,
+	entity_query:  Query< (Entity, &MeshMaterial3d::<StandardMaterial>), Added<MeshMaterial3d::<StandardMaterial>> >,
 
-	   material_name_map_resource: Res <MaterialNameMapResource>,
+	 material_name_map_resource: Res <MaterialNameMapResource>,
 
 ) {
 
