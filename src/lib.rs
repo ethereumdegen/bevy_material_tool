@@ -9,7 +9,7 @@ pub mod material_overrides;
 pub mod material_replacements; 
 
 pub mod materials_config;
-pub mod material_name_map;
+//pub mod material_name_map;
 
 pub mod advanced_materials; 
 
@@ -50,7 +50,7 @@ impl Plugin for BevyMaterialToolPlugin {
     	 .add_plugins(material_overrides::material_overrides_plugin)
          .add_plugins(material_replacements::material_replacements_plugin)
          .add_plugins(advanced_materials::advanced_materials_plugin)
-         .add_plugins(material_name_map::material_name_map_plugin)
+      //   .add_plugins(material_name_map::material_name_map_plugin)
          .add_plugins(gltf_models::gltf_models_plugin)
  
     	;  

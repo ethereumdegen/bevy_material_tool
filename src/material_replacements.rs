@@ -1,11 +1,12 @@
 
  
 use crate::material_overrides::MaterialOverridesSet;
-use crate::material_name_map::MaterialMetadataName;
+//use crate::material_name_map::MaterialMetadataName;
 use crate::BuiltMaterialsResource;
 use crate::material_overrides::{MaterialOverrideComponent, RefreshMaterialOverride};
 use crate::materials_config::MaterialShaderType;
 use crate::{advanced_materials::foliage_material::FoliageMaterialExtension, materials_config::MaterialTypesConfig};
+use bevy::gltf::GltfMaterialName;
 use bevy::math::Affine2;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
@@ -103,10 +104,8 @@ fn handle_material_replacements(
 	// name_query: Query<&Name>,
 	children_query: Query<&Children>,
 
-	  
-
-
-	 material_metadata_query: Query<&MaterialMetadataName>,
+	
+	material_metadata_query: Query<&GltfMaterialName>,
 
  
 ){
@@ -118,28 +117,28 @@ fn handle_material_replacements(
 
                 	  
 
-	             		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
+ 		 	 for child in DescendantIter::new(&children_query, mat_override_entity) {
 
 
 
-	             		 	 	let Some(material_metadata_comp) = material_metadata_query.get(child).ok() else {continue};
+ 		 	 	let Some(material_metadata_comp) = material_metadata_query.get(child).ok() else {continue};
 
 
-  								for (original_mat_name, new_mat_name) in &mat_replacement_request.material_replacements {
+					for (original_mat_name, new_mat_name) in &mat_replacement_request.material_replacements {
 
 
-  									if &material_metadata_comp.0 ==  original_mat_name {
+						if &material_metadata_comp.0 ==  original_mat_name {
 
-  										commands.entity(child).try_insert( MaterialOverrideComponent  {material_override: new_mat_name.clone() }   );
+							commands.entity(child).try_insert( MaterialOverrideComponent  {material_override: new_mat_name.clone() }   );
 
-  									}
-
-
-  								}
-								  
+						}
 
 
-             		  }  
+					}
+				  
+
+
+		  }  
 
 
           }

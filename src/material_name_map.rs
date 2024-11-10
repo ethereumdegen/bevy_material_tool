@@ -3,6 +3,42 @@
 use bevy::{prelude::*, reflect};
 use bevy::utils::HashMap; 
 
+
+
+/*
+
+
+replace this with 
+
+
+fn find_top_material_and_mesh(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    time: Res<Time>,
+    mat_query: Query<(
+        &MeshMaterial3d<StandardMaterial>,
+        &Mesh3d,
+        &GltfMaterialName,
+    )>,
+) {
+    for (mat_handle, mesh_handle, name) in mat_query.iter() {
+        // locate the material and associated submesh by name
+        if name.0 == "Top" {
+            if let Some(material) = materials.get_mut(mat_handle) {
+                // ...
+            }
+
+            if let Some(mesh) = meshes.get_mut(mesh_handle) {
+                // ...
+            }
+        }
+    }
+}
+
+*/
+
+// DEPRECATED
+/* 
 pub fn material_name_map_plugin(app: &mut App) {
     app 	
 
@@ -14,7 +50,7 @@ pub fn material_name_map_plugin(app: &mut App) {
 
     	 ( 
     	 	//build_material_name_map ,
-    	 	add_material_metadata_name_components,   //use bevy 0.15 new feature for this ..
+    	 //	add_material_metadata_name_components,   //use bevy 0.15 new feature for this ..
 
 
     		).chain()
@@ -24,7 +60,7 @@ pub fn material_name_map_plugin(app: &mut App) {
 
 
     ;
-}
+} */
 
 #[derive(Reflect,Resource,Default)] 
 #[reflect(Resource)]
