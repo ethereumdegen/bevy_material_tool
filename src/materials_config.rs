@@ -1,46 +1,34 @@
-
-
-use std::io::Read;
-use std::fs::File;
-use bevy::utils::HashMap;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
+use std::fs::File;
+use std::io::Read;
 
 use serde::Deserialize;
 
 use serde::Serialize;
 
-#[derive(  Resource, Deserialize, Serialize, Clone)]
+#[derive(Resource, Deserialize, Serialize, Clone)]
 pub struct MaterialTypesConfig {
-    
     pub material_types: HashMap<String, MaterialTypeConfig>,
 
-    pub material_replacement_sets: Option< HashMap < String,  HashMap<  String, String   > >  >
-    
-   
+    pub material_replacement_sets: Option<HashMap<String, HashMap<String, String>>>,
 }
 
-
-
-#[derive(  Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct MaterialTypeConfig {
-    
-   //pub name: String,
- 
-   pub material_name: String , 
-   pub uv_scale_factor: f32, 
-   pub diffuse_color_tint: Option<LinearRgba>, 
+    //pub name: String,
+    pub material_name: String,
+    pub uv_scale_factor: f32,
+    pub diffuse_color_tint: Option<LinearRgba>,
 
-
-   pub shader_type: Option<MaterialShaderType>
-    
-   
+    pub shader_type: Option<MaterialShaderType>,
 }
 
 /*
 impl Default for TileTypeConfig {
 
 
-    fn default() -> Self { 
+    fn default() -> Self {
 
         Self {
             name: "UnknownTileType".to_string(),
@@ -53,26 +41,19 @@ impl Default for TileTypeConfig {
 }*/
 
 impl MaterialTypesConfig {
-
-      pub fn load_from_file(file_path: &str) -> Result<Self, ron::Error> {
-
+    pub fn load_from_file(file_path: &str) -> Result<Self, ron::Error> {
         let mut file = File::open(file_path).expect("Failed to open file");
         let mut contents = String::new();
         file.read_to_string(&mut contents)
             .expect("Failed to read file");
         Ok(ron::from_str(&contents)?)
     }
-
 }
 
-
-
-#[derive(  Default, Deserialize, Serialize, Clone)]
+#[derive(Default, Deserialize, Serialize, Clone)]
 pub enum MaterialShaderType {
     #[default]
     StandardMaterial,
 
-    FoliageMaterial 
-
-
+    FoliageMaterial,
 }
